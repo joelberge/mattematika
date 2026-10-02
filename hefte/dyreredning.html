@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dyreredning – hefte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@500;700&family=Andika:wght@400;700&family=Noto+Sans+KR:wght@500;700&display=swap">
+<style>
+  :root {
+    --ink: #2a1a3a;
+    --paper: #ffffff;
+    --desk: #f3dcea;
+    --muted: #7a6388;
+    --pink: #ff6fb0;
+    --pixel: "Press Start 2P", "Noto Sans KR", "Courier New", monospace;
+    --soft: "Pixelify Sans", "Noto Sans KR", "Trebuchet MS", sans-serif;
+    --read: "Andika", "Noto Sans KR", "Trebuchet MS", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--desk); color: var(--ink); font-family: var(--soft);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;
+    padding: 10px 16px; background: var(--ink); color: #fff; font-family: var(--pixel); font-size: 11px;
+  }
+  .toolbar button {
+    font: inherit; color: var(--ink); background: #fff; border: 0; padding: 8px 10px; cursor: pointer;
+    box-shadow: inset -3px -3px 0 #d9c3e6;
+  }
+  .toolbar button.print { background: #8ee0a8; }
+  .toolbar button[aria-pressed="true"] { background: #ffc2de; }
+  .toolbar button:focus-visible { outline: 3px solid #ffd23f; outline-offset: 2px; }
+  .toolbar .hint { font-family: var(--soft); font-size: 14px; opacity: .8; }
+
+  .stack { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 16px; }
+
+  .page {
+    width: 210mm; height: 297mm; padding: 10mm 10mm 9mm; background: var(--paper);
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+    box-shadow: 0 6px 24px rgba(42,26,58,.2);
+  }
+  .page::before {
+    content: ""; position: absolute; inset: 5mm; pointer-events: none;
+    box-shadow: 0 -4px 0 var(--theme), 0 4px 0 var(--theme), -4px 0 0 var(--theme), 4px 0 0 var(--theme);
+  }
+  .page::after {                         /* little pixel hearts in the frame corners */
+    content: ""; position: absolute; inset: 3.4mm; pointer-events: none;
+    background:
+      radial-gradient(circle, var(--theme) 0 2.2mm, transparent 2.3mm) 0 0 / 100% 100% no-repeat;
+    background: none;
+  }
+
+  .head { height: 11mm; display: flex; align-items: center; justify-content: space-between; padding: 0 3mm; }
+  .level {
+    font-family: var(--pixel); font-size: 12px; color: #fff; background: var(--theme); padding: 7px 10px;
+    box-shadow: 0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink);
+  }
+  .name { font-family: var(--pixel); font-size: 17px; letter-spacing: 1px; }
+
+  /* rescue scene: princess (left) and the animal (right) */
+  .stage {
+    height: 60mm; position: relative; margin: 0 3mm;
+    display: grid; grid-template-columns: 1fr auto 1.2fr; align-items: end; padding-bottom: 5mm;
+  }
+  .stage .ground {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 5mm;
+    background:
+      linear-gradient(#8ee0a8 0 1.6mm, var(--ink) 1.6mm 2.2mm, transparent 2.2mm),
+      repeating-linear-gradient(90deg, #ffe0ef 0 6px, #ffc9e1 6px 12px);
+    box-shadow: 0 -3px 0 var(--ink);
+  }
+  .stage .fighter { display: flex; justify-content: center; position: relative; z-index: 1; }
+  .stage svg { width: auto; display: block; }
+  .stage svg.hero { height: 42mm; }
+  .stage svg.animal { height: 36mm; }
+  .page.final .stage svg.animal { height: 42mm; }
+  .stage .mid svg { height: 11mm; }
+  .stage .mid { align-self: center; }
+  .bubble {
+    position: absolute; top: -13mm; left: 50%; transform: translateX(-10%);
+    font-family: var(--pixel); font-size: 12px; background: #fff; padding: 7px 9px; white-space: nowrap;
+    box-shadow: 0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink);
+  }
+  .bubble::after {
+    content: ""; position: absolute; left: 8px; bottom: -9px; width: 6px; height: 6px; background: var(--ink);
+    box-shadow: -3px 3px 0 var(--ink);
+  }
+  .fighter.animal-spot { flex-direction: column; align-items: center; }
+
+  .clear { height: 10mm; flex: none; }
+  .story {
+    text-align: center; font-family: var(--soft); font-weight: 700; font-size: 18px; margin: 0 0 3mm;
+  }
+
+  /* heart meter: five hearts to colour in */
+  .meter { display: flex; justify-content: center; gap: 5mm; }
+  .meter svg { height: 15mm; width: auto; display: block; cursor: pointer; }
+  .meter svg.on .fillme { fill: #ff6fb0; }
+
+  .cards {
+    margin-top: 7mm;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 40mm);
+    gap: 5mm 7mm; padding: 0 3mm;
+  }
+  .card {
+    background: #fff; display: flex; flex-direction: column;
+    box-shadow:
+      0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink),
+      3px 6px 0 #f0d6e6, 6px 3px 0 #f0d6e6, 6px 6px 0 #f0d6e6;
+  }
+  .card .tag {
+    font-family: var(--pixel); font-size: 10px; letter-spacing: 1px; color: #fff; background: var(--theme);
+    padding: 6px 8px 5px; border-bottom: 3px solid var(--ink); display: flex; justify-content: space-between;
+  }
+  .card .tag svg { height: 10px; width: auto; }
+  .card.bonus .tag { background: #ffd23f; color: var(--ink); }
+  .card .q { font-family: var(--pixel); font-size: 21px; line-height: 1.3; padding: 4mm 4mm 0; white-space: nowrap; }
+  .pics { display: flex; gap: 6px; padding: 2mm 4mm 0; align-items: center; flex-wrap: wrap; }
+  .pics .grp { display: flex; gap: 2px; padding: 2px 3px; box-shadow: 0 0 0 2px #c9a9d8; }
+  .pics svg { height: 13px; width: auto; display: block; }
+  .pics .hint { font-family: var(--soft); font-weight: 700; font-size: 18px; color: var(--muted); margin-left: 4px; }
+  .ans {
+    margin: auto 4mm 3mm; height: 12mm; display: flex; align-items: flex-end; gap: 6px;
+    font-family: var(--soft); font-weight: 700; font-size: 18px; color: var(--muted);
+  }
+  .ans span.line { flex: 1; border-bottom: 3px dashed #c9a9d8; margin-bottom: 4px; }
+  .num { font-family: var(--pixel); font-size: .8em; }
+  /* difficulty sets: pizza decimals, tips, long problems */
+  .pizzas { display: flex; align-items: flex-end; gap: 4px; padding: 1.5mm 4mm 0; flex-wrap: wrap; }
+  .pizzas .bn { display: flex; gap: 1px; }
+  .pizzas svg { height: 18px; width: auto; display: block; }
+  .pizzas .op { font-family: var(--pixel); font-size: 11px; padding: 0 2px; }
+  .card .tip { margin: 1.5mm 4mm 0; font-family: var(--soft); font-weight: 700; font-size: 14px; color: #6a6078; }
+  .card .q.xlong { font-size: 12.5px; }
+  .card .q.long { font-size: 16px; }
+  .pics.small svg { height: 9px; } .pics.small { gap: 4px; }
+
+  .foot { margin-top: auto; display: flex; align-items: center; gap: 6mm; padding: 0 3mm 2mm; }
+  .badge {
+    font-family: var(--pixel); font-size: 14px; color: #fff; background: var(--theme); padding: 10px 12px;
+    box-shadow: 0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink);
+    white-space: nowrap;
+  }
+  .foot p { margin: 0; font-family: var(--soft); font-weight: 700; font-size: 19px; line-height: 1.2; }
+  .foot p small { display: block; font-weight: 500; font-size: 14px; color: var(--muted); margin-top: 2px; }
+
+
+  /* korean words */
+  .ko { font-family: "Noto Sans KR", sans-serif; font-weight: 700; }
+  .name small { font-family: var(--soft); font-size: 12px; letter-spacing: 0; color: var(--muted); margin-left: 6px; }
+  .name small .ko { font-size: 15px; color: var(--ink); }
+  .bubble small { display: block; font-family: var(--soft); font-size: 11px; color: var(--muted); margin-top: 3px; text-align: center; }
+  .bubble .ko { font-size: 15px; }
+  .meter .hslot { display: flex; flex-direction: column; align-items: center; gap: 1mm; }
+  .meter .hslot .ko { font-size: 15px; line-height: 1; }
+  .meter .hslot small { font-family: var(--soft); font-size: 11px; color: var(--muted); line-height: 1; }
+
+  /* ---------- story page ---------- */
+  .cover .title { text-align: center; }
+  .cover .title h1 { font-family: var(--pixel); font-size: 22px; line-height: 1.4; margin: 0; }
+  .cover .title h1 em { font-style: normal; color: var(--pink); }
+  .cover .stage { height: 48mm; grid-template-columns: 1.2fr auto 1fr; margin-top: 1mm; }
+  .cover .pair { display: flex; align-items: flex-end; justify-content: center; gap: 3mm; position: relative; z-index: 1; }
+  .cover .pair svg.hero { height: 34mm; }
+  .cover svg.bunny { height: 24mm; }
+  .cover .mid svg { height: 9mm; }
+  .cover .bubble { top: -9mm; }
+  .tale { margin: 5mm 5mm 0; font-family: var(--read); font-size: 18.5px; line-height: 1.5; display: grid; gap: 4mm; }
+  .tale .ko, .tale .nw { white-space: nowrap; }
+  .room .ko { font-size: 20px; line-height: 1; }
+  .room small { font-family: var(--soft); font-size: 12px; color: var(--muted); line-height: 1; }
+  .sign .ko { font-size: 15px; }
+  .diploma .ko { color: var(--pink); }
+  .tale p { margin: 0; }
+  .letter {
+    background: #fff7fb; padding: 3mm 5mm; font-weight: 700;
+    box-shadow: 0 -3px 0 var(--pink), 0 3px 0 var(--pink), -3px 0 0 var(--pink), 3px 0 0 var(--pink);
+  }
+  .letter .ko { color: var(--pink); }
+  .letter .sig { display: block; text-align: right; font-weight: 400; }
+  .tale .big { font-weight: 700; font-size: 21px; }
+  .glossary { margin: auto 3mm 1mm; padding: 3mm 5mm; background: #f4fbf6;
+    box-shadow: 0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink); }
+  .glossary h2 { font-family: var(--pixel); font-size: 11px; margin: 0 0 2.5mm; }
+  .glossary ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm;
+    font-family: var(--read); font-size: 15px; }
+  .glossary .ko { font-size: 17px; margin-right: 4px; }
+  .glossary i { color: var(--muted); }
+
+  /* map */
+  .mapwrap { margin: 2mm 3mm 0; }
+  .mapwrap svg.map { width: 100%; height: auto; display: block; }
+  .map text { font-family: var(--pixel); fill: var(--ink); }
+  .howto { margin: auto 3mm 2mm; display: grid; grid-template-columns: 1fr auto; gap: 6mm; align-items: end; }
+  .howto ol { margin: 0; padding-left: 7mm; font-family: var(--soft); font-weight: 700; font-size: 16px; line-height: 1.35; }
+  .howto h2 { font-family: var(--pixel); font-size: 12px; margin: 0 0 2mm; }
+  .sign { font-family: var(--pixel); font-size: 11px; display: flex; align-items: flex-end; gap: 6px; width: 58mm; }
+  .sign span { flex: 1; border-bottom: 3px solid var(--ink); height: 10mm; }
+
+  /* castle (final) page */
+  .castle-scene { height: 80mm; position: relative; display: flex; align-items: flex-end; justify-content: center; margin: 2mm 3mm 0; }
+  .castle-scene svg.castle { height: 72mm; width: auto; display: block; position: relative; z-index: 1; margin-bottom: 4mm; }
+  .castle-scene svg.tokki { position: absolute; z-index: 2; height: 17mm; width: auto; bottom: 4mm; left: 50%; margin-left: 58mm; }
+  .castle-scene svg.hero { position: absolute; z-index: 2; height: 30mm; width: auto; bottom: 4mm; left: 50%; margin-left: 36mm; }
+  .castle-scene .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 5mm;
+    background: linear-gradient(#8ee0a8 0 1.6mm, var(--ink) 1.6mm 2.2mm, #ffe0ef 2.2mm); box-shadow: 0 -3px 0 var(--ink); }
+  .final-title { text-align: center; font-family: var(--pixel); font-size: 20px; margin: 5mm 0 2mm; }
+  .final-sub { text-align: center; font-family: var(--soft); font-weight: 700; font-size: 18px; margin: 0 0 5mm; color: var(--muted); }
+  .rooms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; padding: 0 3mm; }
+  .room {
+    height: 57mm; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1.5mm; padding-bottom: 2.5mm;
+    box-shadow: 0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink);
+    background: #fff7fb;
+  }
+  .room svg { height: 36mm; width: auto; display: block; }
+  .room b { font-family: var(--pixel); font-weight: 400; font-size: 10px; }
+  .diploma {
+    margin: auto 3mm 2mm; padding: 4mm 6mm; text-align: center; background: #fff7fb;
+    box-shadow: 0 -4px 0 var(--pink), 0 4px 0 var(--pink), -4px 0 0 var(--pink), 4px 0 0 var(--pink);
+  }
+  .diploma h3 { font-family: var(--pixel); font-size: 15px; margin: 0 0 4mm; color: var(--pink); }
+  .diploma p { font-family: var(--soft); font-weight: 700; font-size: 19px; margin: 0; line-height: 1.6; }
+  .diploma p span { display: inline-block; width: 70mm; border-bottom: 3px solid var(--ink); }
+
+  /* answer key */
+  .key h1 { font-family: var(--pixel); font-size: 20px; margin: 4mm 3mm 2mm; }
+  .key > p { font-family: var(--soft); font-size: 15px; margin: 0 3mm 6mm; color: var(--muted); }
+  .key table { border-collapse: collapse; margin: 0 3mm; width: calc(100% - 6mm); font-family: var(--soft); font-size: 15px; }
+  .key th { text-align: left; font-family: var(--pixel); font-size: 10px; padding: 8px 6px; background: var(--ink); color: #fff; }
+  .key td { padding: 6px; border-bottom: 2px solid #f0e2ea; white-space: nowrap; }
+  .key td.lvl, .key td b { font-family: var(--pixel); font-weight: 400; font-size: 11px; }
+
+  @media screen and (max-width: 860px) { .page { zoom: calc((100vw - 32px) / 210mm); } }
+  @media print {
+    @page { size: A4; margin: 0; }
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .stack { padding: 0; gap: 0; display: block; }
+    .page { box-shadow: none; zoom: 1; break-after: page; }
+    .page:last-child { break-after: auto; }
+  }
+</style>
+</head>
+<body>
+<nav class="toolbar" id="toolbar" aria-label="Velg ark"></nav>
+<main class="stack" id="stack"></main>
+
+<script src="sett.js"></script>
+<script src="helt.js"></script>
+<script>
+/* ---------- pixel sprite renderer ---------------------------------------
+   Rows are strings, one char per pixel ('.' = empty). mirror:true treats the
+   rows as a left half. `over` paints extra pixels after mirroring ([y, x, str]).
+   A 1-pixel outline is added automatically. coloring:true makes a colouring-
+   book version: white fills with thin lines where colours meet. */
+const OUT = '#2a1a3a';
+function sprite(rows, pal, { mirror = false, over = [], coloring = false } = {}) {
+  let g = rows.map(r => mirror ? r + [...r].reverse().join('') : r);
+  for (const [y, x, s] of over) g[y] = g[y].padEnd(x + s.length, '.').slice(0, x) + s + g[y].slice(x + s.length);
+  const w = Math.max(...g.map(r => r.length)) + 2;
+  g = ['', ...g, ''].map(r => ('.' + r).padEnd(w, '.').split(''));
+  const h = g.length;
+  const filled = (y, x) => y >= 0 && y < h && x >= 0 && x < w && g[y][x] !== '.';
+  const out = g.map(r => r.slice());
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (g[y][x] === '.' && (filled(y-1,x) || filled(y+1,x) || filled(y,x-1) || filled(y,x+1))) out[y][x] = '#';
+  const colour = c => c === '#' || c === 'K' ? OUT : coloring ? (c === 'E' ? OUT : '#ffffff') : pal[c];
+  let rects = '';
+  for (let y = 0; y < h; y++) {
+    let x = 0;
+    while (x < w) {
+      const c = out[y][x];
+      if (c === '.') { x++; continue; }
+      let e = x; while (e + 1 < w && colour(out[y][e + 1]) === colour(c) && out[y][e + 1] !== '.') e++;
+      rects += `<rect x="${x}" y="${y}" width="${e - x + 1}" height="1" fill="${colour(c)}"/>`;
+      x = e + 1;
+    }
+  }
+  if (coloring) {                        // lines between different colour regions
+    const inside = c => !'.#KEWpn'.includes(c);   // blush, nose and eye shine get no lines
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const c = out[y][x]; if (!inside(c)) continue;
+      if (x + 1 < w && inside(out[y][x + 1]) && out[y][x + 1] !== c) rects += `<rect x="${x + .9}" y="${y}" width=".2" height="1" fill="${OUT}"/>`;
+      if (y + 1 < h && inside(out[y + 1][x]) && out[y + 1][x] !== c) rects += `<rect x="${x}" y="${y + .9}" width="1" height=".2" fill="${OUT}"/>`;
+    }
+  }
+  return { w, h, body: rects };
+}
+const svg = (s, cls) => `<svg class="${cls}" viewBox="0 0 ${s.w} ${s.h}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${s.body}</svg>`;
+function place(s, cx, bottom, height) {
+  const w = height * s.w / s.h;
+  return `<svg x="${cx - w / 2}" y="${bottom - height}" width="${w}" height="${height}" viewBox="0 0 ${s.w} ${s.h}" shape-rendering="crispEdges">${s.body}</svg>`;
+}
+
+/* ---------- the princess ---------- */
+const PRINCESS_ROWS = [
+  "....c..c",
+  "....cccj",
+  "...HHHHH",
+  "..HHHHHH",
+  ".HHHHHHH",
+  ".HHHSSSS",
+  ".HSWESSS",
+  ".HSEESSS",
+  "HHpSSSSS",
+  "HHSSSSSK",
+  "HH.sSSSS",
+  "HH.dDDDD",
+  "HHddDDDj",
+  "H.SDDDDD",
+  "..SDDDDD",
+  "..DDdDDD",
+  ".DDDdDDD",
+  ".DDdDDDD",
+  "DDDdDDDD",
+  "LLLLLLLL",
+  "....jj..",
+];
+const PRINCESS_PAL = { c:'#ffd23f', j:'#ff3d8b', H:'#b5552c', S:'#f8d2ae', s:'#e3a882', W:'#ffffff', E:'#2a1a3a', p:'#ff9cc4',
+     D:'#ff8fc2', d:'#e0609e', L:'#ffffff' };
+const PRINCESS = HELT.custom ? sprite(...HELT.heroFor('yuna')) : sprite(PRINCESS_ROWS, PRINCESS_PAL, { mirror: true });
+
+/* ---------- the five animals ---------- */
+const EYE = '#2a1a3a';
+const ANIMALS = [
+  { key: 'kanin', mirror: true,
+    pal: { w:'#f4eefa', c:'#d9cde8', p:'#ffb3d1', n:'#ff6fa8', b:'#ffffff', E:EYE, W:'#ffffff' },
+    rows: [
+      "...ww....",
+      "..wppw...",
+      "..wppw...",
+      "..wppw...",
+      "..wppw...",
+      "...ww....",
+      "..wwwwwww",
+      ".wwwwwwww",
+      "wwwwwwwww",
+      "wwWEEwwww",
+      "wwEEEwwww",
+      "wwEEEwwww",
+      "wppwwwwwn",
+      "wwwwwwwKw",
+      ".wwwwwwwK",
+      "..wwwwwww",
+      "...cwwbbb",
+      "..wcwwbbb",
+      "...cwwbbb",
+      "..www....",
+    ]},
+  { key: 'katt', mirror: true,
+    pal: { g:'#a3add0', S:'#6f7896', p:'#ffb3d1', n:'#ff6fa8', b:'#ffffff', E:EYE, W:'#ffffff' },
+    rows: [
+      "g........",
+      "gg.......",
+      "gpg......",
+      "gppgggggg",
+      "ggggggSgg",
+      "gggggggSg",
+      "ggWEEgggg",
+      "ggEEEgggg",
+      "ggEEEgggg",
+      "gppgggggn",
+      "ggggggKgK",
+      ".gggggggg",
+      "...gggbbb",
+      "...Sggbbb",
+      "...gggbbb",
+      "..ggg....",
+    ]},
+  { key: 'pingvin', mirror: true,
+    pal: { n:'#2c3a6b', w:'#ffffff', o:'#ff9d2e', p:'#ffb3d1', E:EYE, W:'#ffffff' },
+    rows: [
+      "....nnnnn",
+      "..nnnnnnn",
+      ".nnnnnnnn",
+      ".nnnnnnnn",
+      "nnwwwwwnn",
+      "nwwwwwwwn",
+      "nwWEEwwww",
+      "nwEEEwwww",
+      "nwEEEwwww",
+      "nppwwwwoo",
+      "nwwwwwwwo",
+      ".nwwwwwww",
+      ".nnnwwwww",
+      "nnnnwwwww",
+      "n.nnwwwww",
+      "...nnwwww",
+      "...oooo..",
+    ]},
+  { key: 'rev', mirror: true,
+    pal: { o:'#ff8a3d', c:'#ffe2b8', w:'#ffffff', p:'#ffb3d1', E:EYE, W:'#ffffff' },
+    over: [[12, 15, "oo"], [13, 15, "ooo"], [14, 15, "oooww"], [15, 16, "oww"]],
+    rows: [
+      "o........",
+      "oo.......",
+      "oco......",
+      "occo.....",
+      "occoooooo",
+      "ooooooooo",
+      "ooWEEoooo",
+      "ooEEEoooo",
+      "owEEEoooo",
+      "wwwpwwwwK",
+      ".wwwwwwKw",
+      "..wwwwwwK",
+      "...oowwww",
+      "...oowwww",
+      "..ooowwww",
+      "...KK....",
+    ]},
+  { key: 'enhjorning', mirror: true,
+    pal: { u:'#fff5fb', m:'#ff8fc2', M:'#b99cff', h:'#ffd23f', H:'#f0a800', p:'#ffb3d1', E:EYE, W:'#ffffff' },
+    rows: [
+      ".........h",
+      ".........h",
+      "........hH",
+      "........Hh",
+      ".u......Hh",
+      ".uu..mmMhh",
+      ".upummMmmm",
+      "Muuuummuuu",
+      "MuuWEEuuuu",
+      "MuuEEEuuuu",
+      "MmuEEEuuuu",
+      "Mmpuuuuuuu",
+      "MmuuuuuuKu",
+      ".MmuuuuuuK",
+      "..Mmuuuuuu",
+      "...uuuuuuu",
+      "...uuuuuuu",
+      "...uu..uu.",
+      "...MM..MM.",
+    ]},
+];
+
+const HEART_ROWS = [
+  ".RRR...RRR.",
+  "RWWRR.RRRRR",
+  "RWRRRRRRRRD",
+  "RRRRRRRRRRD",
+  ".RRRRRRRRD.",
+  "..RRRRRRD..",
+  "...RRRRD...",
+  "....RRD....",
+  ".....D.....",
+];
+const HEART = sprite(HEART_ROWS, { R:'#ff6fb0', W:'#ffffff', D:'#e0408a' });
+const MINI_HEART = sprite(HEART_ROWS, { R:'#ff6fb0', W:'#ff6fb0', D:'#ff6fb0' });
+const STAR = sprite(["..y..", ".yyy.", "yyyyy", ".yyy.", ".y.y."], { y:'#ffd23f' });
+
+// An empty heart to colour in (fill has class "fillme" so the screen version can light it up).
+function emptyHeart(cls = '') {
+  const s = sprite(HEART_ROWS, { R:'#fff', W:'#fff', D:'#fff' });
+  return `<svg class="${cls}" viewBox="0 0 ${s.w} ${s.h}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">` +
+    s.body.replace(/fill="#fff"/g, 'class="fillme" fill="#fff"') + `</svg>`;
+}
+
+/* ---------- Pip and her cousin Tokki (same bunny shape, own colours) ---------- */
+const PIP = sprite(ANIMALS[0].rows, { w:'#e9c9a0', c:'#cfa574', p:'#ffb3d1', n:'#ff6fa8', b:'#fff6ea', E:EYE, W:'#ffffff' }, { mirror: true });
+const TOKKI = sprite(ANIMALS[0].rows, { w:'#ffd9e8', c:'#f5b3cf', p:'#ff8fc2', n:'#ff3d8b', b:'#ffffff', E:EYE, W:'#ffffff', j:'#ff3d8b' },
+  { mirror: true, over: [[5, 7, "jjjj"], [6, 8, "jj"]] });   // j = little bow
+const PLANE = sprite([
+  "b.....bb...",
+  "bb....bbb..",
+  "bbbbbbbbbbw",
+  ".....bbb...",
+  ".....bb....",
+], { b:'#8fd3ff', w:'#ffffff' });
+
+/* ---------- scenery ---------- */
+const TREE = sprite([".ppp.", "ppppp", "pPppp", "ppppP", ".pPp.", "..b..", "..b.."], { p:'#ffb3d1', P:'#ff8fc2', b:'#9a6a44' });
+const FLOWER = sprite([".p.", "pyp", ".p.", ".g."], { p:'#ff8fc2', y:'#ffd23f', g:'#5cc15a' });
+const CASTLE = sprite([
+  "...........r",
+  "..r.......rr",
+  ".rrr.....rrr",
+  "rrrrr...rrrr",
+  "wwwww...wwww",
+  "wbwbw...wbbw",
+  "wwwwwwwwwwww",
+  "wwwwwwwwwwww",
+  "wbbwwwwwwwwh",
+  "wbbwwwwwwddd",
+  "wwwwwwwwwddd",
+  "wwwwwwwwwddd",
+], { r:'#ff6fb0', w:'#ffe6f2', b:'#8fd3ff', d:'#b5552c', h:'#ff3d8b' }, { mirror: true });
+function pond(w, h) {
+  const rows = [];
+  for (let y = 0; y < h; y++) {
+    let r = '';
+    for (let x = 0; x < w; x++) {
+      const dx = (x + .5 - w / 2) / (w / 2), dy = (y + .5 - h / 2) / (h / 2);
+      r += dx * dx + dy * dy <= 1 ? (y === 1 && x > w * .25 && x < w * .45 ? 'l' : 'w') : '.';
+    }
+    rows.push(r);
+  }
+  return sprite(rows, { w:'#9fdcf5', l:'#eefaff' });
+}
+function darken(hex, f = .75) {
+  const n = parseInt(hex.slice(1), 16), c = s => Math.round(((n >> s) & 255) * f);
+  return `rgb(${c(16)},${c(8)},${c(0)})`;
+}
+const cloud = color => sprite(["..cccccccccc..", "cccccccccccccc", "..CCCCCCCCCC.."], { c: color, C: darken(color) });
+
+/* ---------- the animals to rescue and their problems ---------- */
+// bonus: [groups, per group] – shown as "groups · per" with a picture.
+const COUNT = [['하나', 'hana'], ['둘', 'dul'], ['셋', 'set'], ['넷', 'net'], ['다섯', 'daseot']];   // 1–5 in Korean
+
+const LEVELS = [
+  { name: 'KANINEN', short: 'KANIN', ko: '토끼', rom: 'tokki', theme: '#b48ce6', badge: 'REDNING!',
+    q: ['3 + 4 =', '8 - 2 =', '5 + 5 =', '10 - 3 =', '6 + 2 + 1 ='], bonus: [2, 3], ans: [7, 6, 10, 7, 9, 6] },
+  { name: 'KATTUNGEN', short: 'KATT', ko: '고양이', rom: 'goyangi', theme: '#7d8fc9', badge: 'REDNING!',
+    q: ['7 + 5 =', '12 - 2 =', '8 + 8 =', '11 - 4 =', '4 + 3 + 3 ='], bonus: [2, 5], ans: [12, 10, 16, 7, 10, 10] },
+  { name: 'PINGVINEN', short: 'PINGVIN', ko: '펭귄', rom: 'penggwin', theme: '#3fa3d9', badge: 'REDNING!',
+    q: ['9 + 6 =', '15 - 5 =', '10 + 7 =', '14 - 6 =', '5 + 5 + 4 ='], bonus: [4, 2], ans: [15, 10, 17, 8, 14, 8] },
+  { name: 'REVEUNGEN', short: 'REV', ko: '여우', rom: 'yeou', theme: '#ff8a3d', badge: 'REDNING!',
+    q: ['12 + 6 =', '18 - 8 =', '9 + 9 =', '16 - 7 =', '20 - 5 ='], bonus: [3, 3], ans: [18, 10, 18, 9, 15, 9] },
+  { name: 'ENHJØRNINGEN', short: 'ENHJØRNING', ko: '유니콘', rom: 'yunikon', theme: '#ff6fb0', badge: 'STOR REDNING!',
+    q: ['15 + 5 =', '20 - 6 =', '11 + 8 =', '17 - 9 =', '10 + 10 + 5 ='], bonus: [3, 4], ans: [20, 14, 19, 8, 25, 12] },
+];
+
+
+// Decimals as pizza (difficulty 3): a whole pizza is 1, half a pizza is 0,5.
+const PIZZA_PAL = { c:'#e8a54b', y:'#ffd23f', r:'#d63a2a' };
+const PIZZA_WHOLE = sprite([".ccc.", "cyryc", "cyyyc", "cryrc", ".ccc."], PIZZA_PAL);
+const PIZZA_HALF = sprite([".cc", "cyr", "cyy", "cry", ".cc"], PIZZA_PAL);
+function pizzaPic(expr) {
+  return `<div class="pizzas" aria-hidden="true">` + expr.replace(' =', '').split(' ').map(t => {
+    if (!/^[\d,]+$/.test(t)) return `<span class="op">${t}</span>`;
+    const v = parseFloat(t.replace(',', '.')), w = Math.floor(v);
+    return `<span class="bn">${svg(PIZZA_WHOLE, '').repeat(w)}${v > w ? svg(PIZZA_HALF, '') : ''}</span>`;
+  }).join('') + `</div>`;
+}
+const qSize = q => q.length > 20 ? ' xlong' : q.length > 15 ? ' long' : '';
+const SET = window.ACTIVE_SET;   // ?d=1|2|3 swaps in a shared difficulty set
+if (SET) LEVELS.forEach((L, i) => { const F = SET.fights[i]; Object.assign(L, { q: F.q, ans: F.ans, bonus: F.bonus.type === 'groups' ? [F.bonus.g, F.bonus.n] : F.bonus }); });
+
+const animalSprite = (i, opts = {}) => sprite(ANIMALS[i].rows, ANIMALS[i].pal, { mirror: ANIMALS[i].mirror, over: ANIMALS[i].over || [], ...opts });
+const princessSvg = svg(PRINCESS, 'hero');
+const miniHeart = svg(MINI_HEART, 'mini');
+
+function bonusPics(groups, per) {
+  return `<div class="pics${groups * per > 15 ? ' small' : ''}" aria-hidden="true">` +
+    Array.from({ length: groups }, () => `<span class="grp">${miniHeart.repeat(per)}</span>`).join('') +
+    `<span class="hint">= ${Array(groups).fill(per).join(' + ')}</span></div>`;
+}
+
+function page(L, i) {
+  const cards = L.q.map((q, k) => `
+    <div class="card"><div class="tag"><span>HJERTE ${k + 1}</span>${svg(MINI_HEART, '')}</div>
+      <div class="q${qSize(q)}">${q}</div>
+      <div class="ans">Svar:<span class="line"></span></div></div>`).join('') + (Array.isArray(L.bonus) ? `
+    <div class="card bonus"><div class="tag"><span>BONUS: GANGESTJERNE</span>${svg(STAR, '')}</div>
+      <div class="q">${L.bonus[0]} · ${L.bonus[1]} =</div>
+      ${bonusPics(L.bonus[0], L.bonus[1])}
+      <div class="ans">Svar:<span class="line"></span></div></div>` : L.bonus.type === 'plus' ? `
+    <div class="card bonus"><div class="tag"><span>BONUS: TELLESTJERNE</span>${svg(STAR, '')}</div>
+      <div class="q">${L.bonus.a} + ${L.bonus.b} =</div>
+      <div class="pics" aria-hidden="true"><span class="grp">${miniHeart.repeat(L.bonus.a)}</span><span class="hint">+</span><span class="grp">${miniHeart.repeat(L.bonus.b)}</span></div>
+      <p class="tip">Tell alle hjertene sammen!</p>
+      <div class="ans">Svar:<span class="line"></span></div></div>` : `
+    <div class="card bonus"><div class="tag"><span>BONUS: KOMMATALL</span>${svg(STAR, '')}</div>
+      <div class="q">${L.bonus.t}</div>${pizzaPic(L.bonus.t)}
+      <p class="tip">Hel pizza = 1. Halv pizza = 0,5.</p>
+      <div class="ans">Svar:<span class="line"></span></div></div>`);
+  const noun = L.name.charAt(0) + L.name.slice(1).toLowerCase();
+  return `
+  <section class="page${i === 4 ? ' final' : ''}" data-page="${i + 1}" style="--theme:${L.theme}">
+    <div class="head"><span class="level">NIVÅ 1 · DYR ${i + 1}</span><span class="name">${L.name}<small><span class="ko">${L.ko}</span> ${L.rom}</small></span></div>
+    <div class="stage"><div class="ground"></div>
+      <div class="fighter">${princessSvg}</div>
+      <div class="mid">${svg(HEART, '')}</div>
+      <div class="fighter animal-spot"><span class="bubble"><span class="ko">도와줘, 미라!</span><small>dowajwo = Hjelp meg, Mira!</small></span>${svg(animalSprite(i), 'animal')}</div></div>
+    <div class="clear"></div>
+    <p class="story">${noun} er redd. Gi den <span class="num">5</span> hjerter, så blir den med deg!</p>
+    <div class="meter">${COUNT.map(([k, r]) => `<div class="hslot">${emptyHeart('slot')}<span class="ko">${k}</span><small>${r}</small></div>`).join('')}</div>
+    <div class="cards">${cards}</div>
+    <div class="foot"><span class="badge">${L.badge}</span>
+      <p>Fargelegg ett hjerte for hvert riktig svar!<small>Alle hjertene fulle? Da blir dyret med deg!</small></p></div>
+  </section>`;
+}
+
+/* ---------- map ---------- */
+const MAP_W = 190, MAP_H = 226, SY = MAP_H / 196;
+const sy = ([x, y]) => [x, y * SY];
+const NODES = [[62, 170], [140, 166], [138, 112], [50, 108], [80, 62]].map(sy);
+const LABEL = ['below', 'below', 'right', 'below', 'above'];
+const START = sy([22, 172]), GOAL = sy([158, 52]);
+
+function mapPage() {
+  const pts = [START, ...NODES, GOAL].map(p => p.join(',')).join(' ');
+  const trees = [[18,128],[30,138],[100,142],[112,150],[182,142],[184,20],[16,72],[28,64],[26,36],[125,30],[182,188],[100,192]]
+    .map(sy).map(([x, y]) => place(TREE, x, y, 13)).join('');
+  const flowers = [[40,150],[88,120],[120,120],[170,80],[10,190],[135,195],[60,20],[100,60],[176,112],[92,168]]
+    .map(sy).map(([x, y]) => place(FLOWER, x, y, 6)).join('');
+  const nodes = NODES.map(([x, y], i) => {
+    const L = LEVELS[i];
+    const [lx, ly] = LABEL[i] === 'right' ? [x + 4, y + 9.5] : LABEL[i] === 'above' ? [x - 23, y - 45] : [x - 21, y + 9.5];
+    const hs = sprite(HEART_ROWS, { R:'#fff', W:'#fff', D:'#fff' });
+    return place(cloud(L.theme), x, y + 6, 9.5) +
+      place(animalSprite(i), x, y, i === 4 ? 26 : 20) +
+      place(hs, lx + 4, ly + 7.5, 7.5) +
+      `<text x="${lx + 10}" y="${ly + 6.5}" font-size="${i === 4 ? 3.6 : 4.2}">${L.short}</text>` +
+      `<text x="${lx + 10}" y="${ly + 12}" font-size="2.8" fill="#7a6388" style="fill:#7a6388">SIDE ${i + 2} · ${L.rom}</text>`;
+  }).join('');
+  return `
+  <section class="page mappage" data-page="kart" style="--theme:#ff6fb0">
+    <div class="head"><span class="level">NIVÅ 1</span><span class="name">BLOMSTERDALEN</span></div>
+    <div class="mapwrap">
+      <svg class="map" viewBox="0 0 ${MAP_W} ${MAP_H}" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="${MAP_W}" height="${MAP_H}" fill="#effaf2"/>
+        ${place(pond(22, 8), 118, 96, 13)}
+        ${trees}${flowers}
+        <polyline points="${pts}" fill="none" stroke="${OUT}" stroke-width="4.4" stroke-linejoin="miter"/>
+        <polyline points="${pts}" fill="none" stroke="#ffc2de" stroke-width="2.8" stroke-dasharray="3 2.2" stroke-linejoin="miter"/>
+        ${place(cloud('#ffe0ef'), START[0], START[1] + 6, 7)}
+        ${place(PRINCESS, START[0], START[1], 20)}
+        <text x="${START[0] - 9}" y="${START[1] + 13}" font-size="3.6">MIRA</text>
+        ${nodes}
+        ${place(CASTLE, GOAL[0], GOAL[1], 30)}
+        <text x="${GOAL[0] - 20}" y="${GOAL[1] + 8}" font-size="3.6">SLOTTET MITT</text>
+        <text x="${GOAL[0] - 20}" y="${GOAL[1] + 13}" font-size="2.8" style="fill:#7a6388">SIDE 7</text>
+      </svg>
+    </div>
+    <div class="howto">
+      <div><h2>SLIK SPILLER DU</h2>
+        <ol>
+          <li>Gå langs stien til neste dyr.</li>
+          <li>Bla til dyrets side og løs oppgavene.</li>
+          <li>Fulle hjerter? Fargelegg hjertet på kartet!</li>
+          <li>Ta med alle dyrene til slottet, der Tokki venter.</li>
+        </ol></div>
+      <div class="sign">PRINSESSE: MIRA <span class="ko">미라</span></div>
+    </div>
+  </section>`;
+}
+
+/* ---------- the castle: bring everyone home ---------- */
+function castlePage() {
+  const rooms = LEVELS.map((L, i) => `<div class="room">${svg(animalSprite(i, { coloring: true }), '')}<b>${L.short}</b><span class="ko">${L.ko}</span><small>${L.rom}</small></div>`).join('') +
+    `<div class="room">${svg((HELT.custom ? sprite(...HELT.heroFor('yuna', { coloring: true })) : sprite(PRINCESS_ROWS, PRINCESS_PAL, { mirror: true, coloring: true })), '')}<b>MIRA</b><span class="ko">미라</span><small>det er meg!</small></div>`;
+  return `
+  <section class="page castlepage" data-page="slott" style="--theme:#ff6fb0">
+    <div class="head"><span class="level">NIVÅ 1 · MÅL</span><span class="name">SLOTTET MITT</span></div>
+    <div class="castle-scene"><div class="ground"></div>${svg(CASTLE, 'castle')}${svg(PRINCESS, 'hero')}${svg(TOKKI, 'tokki')}</div>
+    <h2 class="final-title">HJEMME I SLOTTET!</h2>
+    <p class="final-sub">Tokki sier <span class="ko">고마워!</span> gomawo = takk! Fargelegg hvert dyr når det er trygt hjemme.</p>
+    <div class="rooms">${rooms}</div>
+    <div class="diploma"><h3>DIPLOM</h3>
+      <p>Prinsesse Mira <b class="ko">미라</b> har reddet alle kjæledyrene til Tokki!<br><b class="ko">고마워, 미라! 사랑해!</b> Takk, Mira! Jeg er glad i deg!</p></div>
+  </section>`;
+}
+
+/* ---------- the story ---------- */
+function storyPage() {
+  return `
+  <section class="page cover" data-page="historie" style="--theme:#ff6fb0">
+    <div class="head"><span class="level">HISTORIEN</span><span class="name">NIVÅ 1</span></div>
+    <div class="title"><h1>PRINSESSE MIRA OG<br><em>DYRENE I SØR-KOREA</em></h1></div>
+    <div class="stage"><div class="ground"></div>
+      <div class="pair">${svg(PRINCESS, 'hero')}${svg(PIP, 'bunny')}</div>
+      <div class="mid">${svg(PLANE, '')}</div>
+      <div class="fighter animal-spot"><span class="bubble"><span class="ko">안녕!</span> annyeong<small>= Hei!</small></span>${svg(TOKKI, 'bunny')}</div>
+    </div>
+    <div class="tale">
+      <p>En dag kom det et brev til kaninen Pip. Det var fra kusinen hennes, Tokki. Tokki bor langt borte, i Sør-Korea.</p>
+      <p class="letter"><span class="ko">안녕</span>, Pip! Jeg var på sykkeltur, og alle kjæledyrene mine ble borte. Kan du og prinsesse Mira komme og hjelpe meg?
+        <span class="sig">Hilsen Tokki</span></p>
+      <p>Mira og Pip satte seg på flyet med en gang. Men i Sør-Korea var det et problem. Dyrene kjente ikke <span class="ko">미라</span> (Mira). De var redde og gjemte seg. Og Mira kunne ikke koreansk!</p>
+      <p>Da fikk Pip en god idé: – Matte er likt på alle språk! <span class="nw">3 + 4 er 7</span> i Norge, og <span class="nw">3 + 4 er 7</span> i Sør-Korea.</p>
+      <p>For hvert riktig svar får dyret et hjerte. Når dyret har fått fem hjerter, stoler det på <span class="ko">미라</span> og blir med henne.</p>
+      <p class="big">Klarer du det, Mira? Finn alle dyrene og ta dem med til slottet, der Tokki venter! <span class="ko">갑시다!</span> Gapsida! Nå drar vi!</p>
+    </div>
+    <div class="glossary"><h2>LÆR KOREANSK</h2>
+      <ul>
+        <li><span class="ko">안녕</span> annyeong <i>= hei</i></li>
+        <li><span class="ko">고마워</span> gomawo <i>= takk</i></li>
+        <li><span class="ko">도와줘</span> dowajwo <i>= hjelp meg</i></li>
+        <li><span class="ko">사랑해</span> saranghae <i>= jeg er glad i deg</i></li>
+        <li><span class="ko">토끼</span> tokki <i>= kanin (Tokki betyr kanin!)</i></li>
+        <li><span class="ko">하나 둘 셋 넷 다섯</span> <i>= 1 2 3 4 5</i></li>
+        <li><span class="ko">미라</span> Mira <i>= Mira på koreansk</i></li>
+        <li><span class="ko">한국</span> hanguk <i>= Sør-Korea</i></li>
+      </ul>
+    </div>
+  </section>`;
+}
+
+function keyPage() {
+  const rows = LEVELS.map((L, i) => `<tr><td class="lvl">${i + 1}</td><td>${L.name.charAt(0) + L.name.slice(1).toLowerCase()}</td>` +
+    L.ans.map(a => `<td><b>${a}</b></td>`).join('') + `</tr>`).join('');
+  return `
+  <section class="page key" data-page="fasit" style="--theme:#2a1a3a">
+    <h1>FASIT · NIVÅ 1</h1>
+    <p>For voksne. Svarene i samme rekkefølge som kortene: Hjerte 1–5, så bonus.</p>
+    <table><thead><tr><th>DYR</th><th>NAVN</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>BONUS</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+  </section>`;
+}
+
+const stack = document.getElementById('stack');
+stack.innerHTML = HELT.names('yuna', storyPage() + mapPage() + LEVELS.map(page).join('') + castlePage() + keyPage());
+
+// Screen only: tap a heart to colour it in.
+stack.addEventListener('click', e => {
+  const h = e.target.closest('.meter svg');
+  if (h) h.classList.toggle('on');
+});
+
+const tb = document.getElementById('toolbar');
+const views = [['alle', 'ALLE'], ['historie', 'HISTORIE'], ['kart', 'KART'], ...LEVELS.map((_, i) => [String(i + 1), 'DYR ' + (i + 1)]), ['slott', 'SLOTT'], ['fasit', 'FASIT']];
+tb.innerHTML = views.map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v === 'alle'}">${t}</button>`).join('') +
+  `<button type="button" id="printbtn" class="print">SKRIV UT / LAGRE SOM PDF</button>` +
+  `<span class="hint">Velg «Lagre som PDF» i utskriftsvinduet, eller skriv ut direkte på A4.</span>`;
+tb.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !b.dataset.v) return;
+  tb.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  document.querySelectorAll('.page').forEach(p => { p.hidden = !(b.dataset.v === 'alle' || p.dataset.page === b.dataset.v); });
+});
+document.getElementById('printbtn').addEventListener('click', () => window.print());
+const startView = tb.querySelector(`button[data-v="${location.hash.slice(1)}"]`);
+if (startView) startView.click();
+</script>
+</body>
+</html>
