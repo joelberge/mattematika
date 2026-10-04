@@ -30,9 +30,7 @@
   .wrap { max-width: 980px; margin: 0 auto; padding-inline: 20px; padding-block: 22px 56px; }
 
   .bar { display: flex; justify-content: space-between; align-items: center; min-height: 32px; }
-  .brand { font-family: var(--pixel); font-size: 11px; letter-spacing: 1px; text-decoration: none; display: inline-flex; gap: 10px; align-items: center; }
-  .brand svg { height: 18px; width: auto; display: block; }
-  .bar .free { font-family: var(--pixel); font-size: 9px; color: var(--muted); }
+  .brand { font-family: var(--pixel); font-size: 16px; letter-spacing: 1px; text-decoration: none; text-shadow: 2px 2px 0 var(--gold); }
 
   .btn {
     font-family: var(--pixel); font-size: 12px; letter-spacing: .5px; color: var(--ink); background: var(--gold);
@@ -61,9 +59,10 @@
   .home .small { margin-top: 64px; font-family: var(--pixel); font-size: 9px; color: var(--muted); letter-spacing: 1px; }
 
   /* 2) level */
-  .mascot { display: flex; justify-content: center; align-items: flex-start; gap: 6px; margin-top: 18px; }
+  .mascot { display: flex; justify-content: center; margin-top: 18px; }
+  .mascot .fig { position: relative; }
   .mascot svg { display: block; width: auto; }
-  .speech { position: relative; font-family: var(--pixel); font-size: 13px; background: #fff; padding: 12px 16px; margin-top: 6px;
+  .speech { position: absolute; left: calc(100% + 8px); top: 6px; white-space: nowrap; font-family: var(--pixel); font-size: 13px; background: #fff; padding: 12px 16px;
     box-shadow: 0 0 0 3px var(--ink); }
   .speech::before { content: ""; position: absolute; left: -9px; bottom: 6px; width: 6px; height: 6px; background: var(--ink);
     box-shadow: 3px -3px 0 var(--ink); }
@@ -101,36 +100,6 @@
   .land .btn { width: 100%; margin-top: 22px; font-size: 13px; padding: 18px; }
   .status { min-height: 1.5em; margin: 12px 0 0; text-align: center; color: var(--muted); font-size: 16px; }
   .status.ok { color: #1f7a33; } .status.err { color: #c8232c; }
-  .tip { text-align: center; color: var(--muted); font-size: 15px; margin: 4px 0 0; }
-
-  /* "Lag din egen helt", folded away under the download */
-  .custom { margin-top: 30px; border-top: 3px solid var(--line); padding-top: 22px; }
-  .custom summary { cursor: pointer; font-family: var(--pixel); font-size: 11px; list-style: none; text-align: center; line-height: 1.8; }
-  .custom summary::-webkit-details-marker { display: none; }
-  .custom summary::before { content: "+ "; color: #e0452a; }
-  .custom[open] summary::before { content: "– "; }
-  .custom summary small { display: block; font-family: var(--body); font-size: 15px; color: var(--muted); letter-spacing: 0; }
-  .form { display: grid; gap: 16px; margin-top: 20px; }
-  .form p { margin: 0; color: var(--muted); font-size: 16px; }
-  .form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-  .form legend, .form .f > span { font-family: var(--pixel); font-size: 9px; margin-bottom: 8px; display: block; padding: 0; }
-  .form .f { display: grid; }
-  .form input[type="text"] { font: inherit; font-size: 18px; padding: 10px 12px; border: 0; background: #fff; color: var(--ink); box-shadow: 0 0 0 3px var(--ink); width: 100%; min-width: 0; }
-  .form input[type="text"]:focus-visible { outline: 3px solid #ff6fb0; outline-offset: 3px; }
-  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
-  .swatches, .choicebar { display: flex; gap: 10px; flex-wrap: wrap; }
-  .swatches label, .choicebar label { position: relative; cursor: pointer; }
-  .swatches input, .choicebar input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .swatches span { display: block; width: 30px; height: 30px; box-shadow: 0 0 0 3px var(--ink); }
-  .swatches input:checked + span { box-shadow: 0 0 0 3px var(--ink), 0 0 0 7px var(--gold); }
-  .choicebar span { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-family: var(--pixel); font-size: 9px; background: #fff; box-shadow: 0 0 0 3px var(--ink); }
-  .choicebar span svg { height: 28px; width: auto; }
-  .choicebar input:checked + span { background: var(--gold); }
-  .swatches input:focus-visible + span, .choicebar input:focus-visible + span { outline: 3px solid #ff6fb0; outline-offset: 6px; }
-  .preview { display: flex; align-items: flex-end; justify-content: center; gap: 18px; padding: 14px 12px 0; min-height: 160px;
-    background: linear-gradient(#e3f3ff 0 82%, #5cc15a 82% 88%, #d9b98a 88%); box-shadow: 0 0 0 3px var(--ink); }
-  .preview svg { display: block; width: auto; margin-bottom: 12px; }
-  .preview .who { align-self: flex-start; font-family: var(--pixel); font-size: 11px; background: #fff; padding: 6px 8px; box-shadow: 0 0 0 3px var(--ink); max-width: 60%; overflow-wrap: anywhere; }
 
   footer { margin-top: 64px; padding-top: 18px; border-top: 3px solid var(--line); text-align: center; color: var(--muted); font-size: 15px; }
 
@@ -139,13 +108,12 @@
     .games { gap: 40px; margin-top: 44px; }
     .game .art { height: 140px; }
   }
-  @media (max-width: 480px) { .two { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
 <div class="wrap">
   <div class="bar" id="bar"></div>
   <main id="view"></main>
-  <footer>Gratis mattehefter til utskrift · 6–10 år · A4</footer>
+  <footer>Mattehefter til utskrift · 6–10 år · A4</footer>
 </div>
 
 <script>
@@ -204,22 +172,6 @@ const LEVELS = [
     ex: [['ANGREP', '175 + 48 ='], ['ANGREP', '4 - 13 ='], ['ANGREP', '((6 + 4) · 3) - 5 ='], ['BONUS', '2,5 + 2,5 =', pizzas()]] },
 ];
 
-/* hero figures and colours for "Lag din egen helt" */
-const KID_ROWS = ["....H.H.", "...HHHHH", "..HHHHHH", ".HHHhHHH", ".BBBBBBB", ".HSSSSSS", ".HSWbSSS", ".HSWbSSS", "sSSSSSSS", ".SSSSSSK",
-  "..sSSSSS", "..TTTTTT", ".TTTTTTY", ".TtTTTYY", ".StTTTTY", ".SLLLLLL", "..PPPPPP", "...PPP..", "..OOOO.."];
-const KID_PAL = { H:'#7a4520', h:'#4a2a12', B:'#ff7a1a', S:'#f5c996', s:'#dd9f68', W:'#ffffff', b:'#1a78c2', T:'#1fa8a0', t:'#13716c', Y:'#ffd23f', L:'#5a3418', P:'#3a4a8a', O:'#5a3418' };
-const PRIN_ROWS = ["....c..c", "....cccj", "...HHHHH", "..HHHHHH", ".HHHHHHH", ".HHHSSSS", ".HSWESSS", ".HSEESSS", "HHpSSSSS", "HHSSSSSK",
-  "HH.sSSSS", "HH.dDDDD", "HHddDDDj", "H.SDDDDD", "..SDDDDD", "..DDdDDD", ".DDDdDDD", ".DDdDDDD", "DDDdDDDD", "LLLLLLLL", "....jj.."];
-const PRIN_PAL = { c:'#ffd23f', j:'#ff3d8b', H:'#b5552c', S:'#f8d2ae', s:'#e3a882', W:'#ffffff', E:'#2a1a3a', p:'#ff9cc4', D:'#ff8fc2', d:'#e0609e', L:'#ffffff' };
-const HAIR = [['Brun', '7a4520'], ['Mørk', '2a1f2e'], ['Blond', 'f2c14e'], ['Rød', 'c8552c'], ['Lys brun', 'b5752c']];
-const SKIN = [['Lys', 'f8d2ae'], ['Lys middels', 'e8b48a'], ['Middels', 'c68a5a'], ['Mørk', '8d5a3b']];
-const CLOTHES = [['Turkis', '1fa8a0'], ['Rød', 'e0452a'], ['Blå', '2f6fd1'], ['Lilla', '8a3fd1'], ['Rosa', 'ff8fc2'], ['Grønn', '3fae6a']];
-const shade = (c, f) => { const n = parseInt(c, 16), ch = s => Math.round(((n >> s) & 255) * f).toString(16).padStart(2, '0'); return '#' + ch(16) + ch(8) + ch(0); };
-const heroSprite = (figur, har, hud, klaer) => figur === 'prinsesse'
-  ? sprite(PRIN_ROWS, { ...PRIN_PAL, H: '#' + har, S: '#' + hud, s: shade(hud, .86), D: '#' + klaer, d: shade(klaer, .78) }, { mirror: true })
-  : sprite(KID_ROWS, { ...KID_PAL, H: '#' + har, h: shade(har, .6), S: '#' + hud, s: shade(hud, .86), T: '#' + klaer, t: shade(klaer, .65) }, { mirror: true });
-const cleanName = v => v.replace(/[<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14);
-
 /* ---------- views ---------- */
 const view = document.getElementById('view'), bar = document.getElementById('bar');
 
@@ -228,7 +180,7 @@ function home() {
   view.innerHTML = `
     <section class="home">
       <h1 class="logo">MATTEMATIKA</h1>
-      <p class="tagline">Mattespillet du skriver ut. Barnet slår monstre eller redder dyr, med matte.</p>
+      <p class="tagline">Lær deg å slåss mot monstre eller redde dyr med matte, med penn og papir.</p>
       <div class="games">
         ${Object.entries(GAMES).map(([key, G]) => `
           <a class="game" href="#${key}"><span class="art">${G.art()}</span><span class="btn">VELG ${G.title.toUpperCase()} &gt;</span></a>`).join('')}
@@ -240,7 +192,7 @@ function levels(key) {
   const G = GAMES[key];
   view.innerHTML = `
     <a class="back" href="#">&lt; TILBAKE</a>
-    <div class="mascot">${G.mascot()}<span class="speech">${G.say}</span></div>
+    <div class="mascot"><div class="fig">${G.mascot()}<span class="speech">${G.say}</span></div></div>
     <h2 class="pick">VELG NIVÅ</h2>
     <div class="levels">
       ${LEVELS.map(L => `
@@ -267,9 +219,6 @@ async function loadMap(key, el) {
 function download(key, n) {
   const G = GAMES[key], L = LEVELS[n - 1];
   const file = `${key}-verden1-niva${n}.pdf`, nice = `Mattematika - ${G.title} - Nivå ${n}.pdf`;
-  const inClaude = !!window.claude;
-  const swatch = (name, list, def) => `<div class="swatches">${list.map(([label, hex]) =>
-    `<label title="${label}"><input type="radio" name="${name}" value="${hex}"${hex === def ? ' checked' : ''} aria-label="${label}"><span style="background:#${hex}"></span></label>`).join('')}</div>`;
   view.innerHTML = `
     <a class="back" href="#${key}">&lt; VELG ET ANNET NIVÅ</a>
     <div class="dl-head">
@@ -281,51 +230,9 @@ function download(key, n) {
       <div class="kart" id="kart" role="img" aria-label="Kart over ${G.land}"></div>
       <button class="btn" type="button" id="dlbtn">LAST NED PDF &gt;</button>
       <p class="status" id="status" role="status"></p>
-      <p class="tip">Skriv ut på A4 i farger. Mangler fargene? Slå på «Bakgrunnsgrafikk».</p>
-      <details class="custom">
-        <summary>LAG DIN EGEN HELT<small>Barnet blir helten i historien. Også gratis.</small></summary>
-        ${inClaude ? `<div class="form"><p>Denne delen virker på den vanlige nettsiden, der heftet kan skrives ut.</p></div>` : `
-        <form class="form" id="customform" autocomplete="off">
-          <p>Alt skjer i nettleseren din, så navnet sendes ikke til noen.</p>
-          <div class="preview" id="preview" aria-hidden="true"></div>
-          <label class="f" for="f-navn"><span>HELTENS NAVN</span><input type="text" id="f-navn" maxlength="14" placeholder="${G.hero}"></label>
-          <fieldset><legend>FIGUR</legend><div class="choicebar">
-            <label><input type="radio" name="figur" value="helt"${G.defFigur === 'helt' ? ' checked' : ''}><span>${sprite(KID_ROWS, KID_PAL, { mirror: true })('28px')}HELT</span></label>
-            <label><input type="radio" name="figur" value="prinsesse"${G.defFigur === 'prinsesse' ? ' checked' : ''}><span>${sprite(PRIN_ROWS, PRIN_PAL, { mirror: true })('28px')}PRINSESSE</span></label>
-          </div></fieldset>
-          <fieldset><legend>HÅR</legend>${swatch('har', HAIR, G.defFigur === 'helt' ? '7a4520' : 'b5752c')}</fieldset>
-          <fieldset><legend>HUD</legend>${swatch('hud', SKIN, 'f8d2ae')}</fieldset>
-          <fieldset><legend>KLÆR</legend>${swatch('klaer', CLOTHES, G.defClothes)}</fieldset>
-          <div class="two">${G.extras.map(([id, label, def]) =>
-            `<label class="f" for="f-${id}"><span>${label.toUpperCase()}</span><input type="text" id="f-${id}" maxlength="14" placeholder="${def}"></label>`).join('')}</div>
-          ${key === 'dyreredning' ? `<fieldset><legend>TITTEL</legend><div class="choicebar">
-            <label><input type="radio" name="tittel" value="" checked><span>PRINSESSE</span></label>
-            <label><input type="radio" name="tittel" value="prins"><span>PRINS</span></label></div></fieldset>` : ''}
-          <a class="btn" id="makebtn" href="#" target="_blank" rel="noopener">LAG HEFTET &gt;</a>
-          <p>Heftet åpnes i en ny fane. Trykk «Skriv ut / lagre som PDF» øverst.</p>
-        </form>`}
-      </details>
     </div>`;
   loadMap(key, document.getElementById('kart'));
   document.getElementById('dlbtn').addEventListener('click', () => save(file, nice));
-  if (inClaude) return;
-
-  const form = document.getElementById('customform');
-  const val = name => (form.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
-  function update() {
-    const figur = val('figur'), har = val('har'), hud = val('hud'), klaer = val('klaer');
-    const typed = cleanName(document.getElementById('f-navn').value), navn = typed || G.hero;
-    document.getElementById('preview').innerHTML = `${heroSprite(figur, har, hud, klaer)('116px', navn)}<span class="who">${navn.toUpperCase()}</span>`;
-    const params = new URLSearchParams({ d: n, figur, har, hud, klaer });
-    if (typed) params.set('navn', typed);
-    for (const [id] of G.extras) { const v = cleanName(document.getElementById('f-' + id).value); if (v) params.set(id, v); }
-    if (val('tittel')) params.set('tittel', val('tittel'));
-    document.getElementById('makebtn').href = `hefte/${key}.html#${params.toString()}`;
-  }
-  form.addEventListener('input', update);
-  form.addEventListener('change', update);
-  form.addEventListener('submit', e => e.preventDefault());
-  update();
 }
 
 async function save(file, nice) {
@@ -355,7 +262,7 @@ async function save(file, nice) {
 /* ---------- routing with bare #tokens ---------- */
 function render() {
   const m = location.hash.slice(1).match(/^(monsterkamp|dyreredning)(?:-([123]))?$/);
-  if (m) bar.innerHTML = `<a class="brand" href="#">${HEART('18px')}MATTEMATIKA</a><span class="free">GRATIS</span>`;
+  if (m) bar.innerHTML = `<a class="brand" href="#">MATTEMATIKA</a>`;
   if (m && m[2]) download(m[1], +m[2]);
   else if (m) levels(m[1]);
   else home();
