@@ -108,7 +108,7 @@
 
   .cards {
     margin-top: 8mm;
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(3, 41mm);
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(3, 38mm);
     gap: 5mm 7mm; padding: 0 3mm;
   }
   .card {
@@ -253,6 +253,7 @@
 
 <script src="sett.js"></script>
 <script src="helt.js"></script>
+<script src="butikk.js"></script>
 <script>
 /* ---------- pixel sprite renderer ---------------------------------------
    Rows are strings, one char per pixel ('.' = empty). With mirror:true the
@@ -624,6 +625,7 @@ if (SET) LEVELS.forEach((L, i) => Object.assign(L, SET.fights[i]));
 const svgMarkup = MONSTERS.map(m => svg(sprite(m.rows, m.pal, { mirror: m.mirror }), 'monster'));
 const heartSvg = svg(HEART, 'heart');
 const heroSvg = svg(HERO, 'hero');
+const SHOP = Butikk({ sprite, svg, book: 'elliot' });   // coins + the shop on page 6
 const gemSvg = svg(GEM, 'gem');
 
 function gems(n, groups) {
@@ -669,8 +671,9 @@ function page(L, i) {
     <div class="clear"></div>
     <div class="hp">${heartSvg}${healthBar()}</div>
     <div class="cards">${cards}</div>
-    <div class="foot"><span class="badge">${L.badge}</span>
-      <p>Løs <span class="num">5</span> oppgaver for å beseire monsteret!<small>Kryss ut ett liv for hvert riktig svar. Vant du? Kryss av på kartet!</small></p></div>
+    <div class="foot coinfoot"><div class="line1"><span class="badge">${L.badge}</span>
+      <p>Løs <span class="num">5</span> oppgaver for å beseire monsteret!<small>Kryss ut ett liv og fargelegg én mynt for hvert riktig svar. Vant du? Kryss av på kartet!</small></p></div>
+      ${SHOP.coinRow(6)}</div>
   </section>`;
 }
 
@@ -680,9 +683,11 @@ const sy = ([x, y]) => [x, y * SY];
 const NODES = [[62, 170], [140, 166], [148, 112], [50, 108], [80, 62]].map(sy);
 const LABEL = ['below', 'below', 'right', 'below', 'above'];   // where each node's tick box and name sit
 const START = sy([22, 172]), GOAL = sy([158, 52]);
+const SHOP_AT = sy([92, 98]);
+const PAGE_OF = [3, 4, 5, 7, 8];   // the shop is page 6, Blodio page 9
 
 function mapPage() {
-  const pts = [START, ...NODES, GOAL].map(p => p.join(',')).join(' ');
+  const pts = [START, NODES[0], NODES[1], NODES[2], SHOP_AT, NODES[3], NODES[4], GOAL].map(p => p.join(',')).join(' ');
   const trees = [[18,128],[30,138],[100,142],[112,150],[182,142],[184,20],[16,72],[28,64],[26,36],[125,30],[182,188],[100,192]]
     .map(sy).map(([x, y]) => place(TREE, x, y, 13)).join('');
   const nodes = NODES.map(([x, y], i) => {
@@ -692,7 +697,7 @@ function mapPage() {
       place(sprite(MONSTERS[i].rows, MONSTERS[i].pal, { mirror: MONSTERS[i].mirror }), x, y, boss ? 32 : 25) +
       `<rect x="${lx}" y="${ly}" width="7" height="7" fill="#fff" stroke="${OUT}" stroke-width="1"/>` +
       `<text x="${lx + 9}" y="${ly + 6.5}" font-size="${L.short.length > 8 ? 3.4 : 4.2}">${L.short}</text>` +
-      `<text x="${lx + 9}" y="${ly + 12}" font-size="2.8" fill="#5b5468">SIDE ${i + 3}</text>`;
+      `<text x="${lx + 9}" y="${ly + 12}" font-size="2.8" fill="#5b5468">SIDE ${PAGE_OF[i]}</text>`;
   }).join('');
   return `
   <section class="page mappage" data-page="kart" style="--theme:#3a8f3e">
@@ -704,6 +709,9 @@ function mapPage() {
         ${trees}
         <polyline points="${pts}" fill="none" stroke="#16121c" stroke-width="4.4" stroke-linejoin="miter"/>
         <polyline points="${pts}" fill="none" stroke="#e2c38f" stroke-width="2.8" stroke-dasharray="3 2.2" stroke-linejoin="miter"/>
+        ${place(SHOP.ICON, SHOP_AT[0], SHOP_AT[1] + 4, 14)}
+        <text x="${SHOP_AT[0] - 13}" y="${SHOP_AT[1] + 9}" font-size="3.2">BUTIKK</text>
+        <text x="${SHOP_AT[0] - 13}" y="${SHOP_AT[1] + 13.5}" font-size="2.8" fill="#5b5468" style="fill:#5b5468">SIDE 6</text>
         ${place(platform('#e2c38f'), START[0], START[1] + 6, 7)}
         ${place(HERO, START[0], START[1], 19)}
         <text x="${START[0] - 9}" y="${START[1] + 13}" font-size="3.6">START</text>
@@ -712,7 +720,7 @@ function mapPage() {
         ${place(BLODIO, GOAL[0], GOAL[1] + 1, 17)}
         <rect x="${GOAL[0] - 24}" y="${GOAL[1] + 4}" width="7" height="7" fill="#fff" stroke="${OUT}" stroke-width="1"/>
         <text x="${GOAL[0] - 15}" y="${GOAL[1] + 10.5}" font-size="4.2">BLODIO</text>
-        <text x="${GOAL[0] - 15}" y="${GOAL[1] + 16}" font-size="2.8" fill="#5b5468">SIDE 8</text>
+        <text x="${GOAL[0] - 15}" y="${GOAL[1] + 16}" font-size="2.8" fill="#5b5468">SIDE 9</text>
       </svg>
     </div>
     <div class="howto">
@@ -785,7 +793,7 @@ function blodioPage() {
   const cards = F.q.map((q, k) => card(`ANGREP ${k + 1}`, q)).join('') +
     (F.frac ? card('ANGREP 10', `Hva er ${frac(F.frac.a, F.frac.b)} av <span class="num">${F.frac.n}</span>?`, 'words', gems(F.frac.n, F.frac.b)) : '') +
     card('SUPERANGREP ★', `${F.missing}`, 'super') +
-    `<div class="card win"><b>BOMMET DU?</b><span>Superangrepet tar ett liv. Bruk det hvis du bommet på ett av de andre!</span></div>`;
+    `<div class="card win"><b>BRUK UTSTYRET!</b><span>Superangrepet tar ett liv. Har du kjøpt noe i butikken? Det virker også mot Blodio!</span></div>`;
   return `
   <section class="page blodio boss" data-page="blodio" style="--theme:#c8232c">
     <div class="head"><span class="level">NIVÅ 1 · SLUTTKAMP</span><span class="name">BLODIO</span></div>
@@ -816,7 +824,8 @@ function keyPage() {
 }
 
 const stack = document.getElementById('stack');
-stack.innerHTML = HELT.names('elliot', storyPage() + mapPage() + LEVELS.map(page).join('') + blodioPage() + keyPage());
+stack.innerHTML = HELT.names('elliot', storyPage() + mapPage() + LEVELS.slice(0, 3).map(page).join('') +
+  SHOP.page({ hero: HERO, level: 'NIVÅ 1', next: 'sluttkampen' }) + LEVELS.slice(3).map((L, i) => page(L, i + 3)).join('') + blodioPage() + keyPage());
 
 // Screen only: tap a health segment to knock it out.
 stack.addEventListener('click', e => {
@@ -826,7 +835,7 @@ stack.addEventListener('click', e => {
 
 // Screen only: pick which sheet to show (Ctrl+P prints what is shown).
 const tb = document.getElementById('toolbar');
-const views = [['alle', 'ALLE'], ['historie', 'HISTORIE'], ['kart', 'KART'], ...LEVELS.map((_, i) => [String(i + 1), 'KAMP ' + (i + 1)]), ['blodio', 'BLODIO'], ['fasit', 'FASIT']];
+const views = [['alle', 'ALLE'], ['historie', 'HISTORIE'], ['kart', 'KART'], ...LEVELS.slice(0, 3).map((_, i) => [String(i + 1), 'KAMP ' + (i + 1)]), ['butikk', 'BUTIKK'], ['4', 'KAMP 4'], ['5', 'KAMP 5'], ['blodio', 'BLODIO'], ['fasit', 'FASIT']];
 tb.innerHTML = views.map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v === 'alle'}">${t}</button>`).join('') +
   `<button type="button" id="printbtn" class="print">SKRIV UT / LAGRE SOM PDF</button>` +
   `<span class="hint">Velg «Lagre som PDF» i utskriftsvinduet, eller skriv ut direkte på A4.</span>`;

@@ -157,7 +157,7 @@ const GAMES = {
     about: '9 sider: historie, kart, fem kamper, sluttkamp mot Blodio og fasit.',
     extras: [['venn', 'Prinsessen som skal reddes', 'Nogi'], ['skurk', 'Skurken', 'Blodio']] },
   dyreredning: { title: 'Dyreredning', mascot: () => BUNNY('130px', 'Kaninen'), art: () => BUNNY('120px', 'Kaninen'), say: 'Jippi!',
-    color: '#ff6fb0', land: 'Dyrene i Sør-Korea', hero: 'Mira', defFigur: 'prinsesse', defClothes: 'ff8fc2',
+    color: '#ff6fb0', land: 'Blomsterdalen', hero: 'Mira', defFigur: 'prinsesse', defClothes: 'ff8fc2',
     about: '9 sider: historie, kart, fem dyr å redde, slottet med diplom og fasit.',
     extras: [['dyr', 'Kaninen heter', 'Pip']] },
 };
@@ -224,7 +224,6 @@ function download(key, n) {
     <div class="dl-head">
       <div class="eyebrow" style="color:${G.color}">${G.title.toUpperCase()} · NIVÅ ${n} ${L.name}</div>
       <h2>${G.land}</h2>
-      <p>${G.about}</p>
     </div>
     <div class="land">
       <div class="kart" id="kart" role="img" aria-label="Kart over ${G.land}"></div>

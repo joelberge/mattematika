@@ -106,7 +106,7 @@
 
   .cards {
     margin-top: 7mm;
-    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 40mm);
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(3, 37mm);
     gap: 5mm 7mm; padding: 0 3mm;
   }
   .card {
@@ -254,6 +254,7 @@
 
 <script src="sett.js"></script>
 <script src="helt.js"></script>
+<script src="butikk.js"></script>
 <script>
 /* ---------- pixel sprite renderer ---------------------------------------
    Rows are strings, one char per pixel ('.' = empty). mirror:true treats the
@@ -512,6 +513,7 @@ const cloud = color => sprite(["..cccccccccc..", "cccccccccccccc", "..CCCCCCCCCC
 
 /* ---------- the animals to rescue and their problems ---------- */
 // bonus: [groups, per group] – shown as "groups · per" with a picture.
+const KOREA = false;   // Korean words and the trip to South Korea; the public build switches this off
 const COUNT = [['하나', 'hana'], ['둘', 'dul'], ['셋', 'set'], ['넷', 'net'], ['다섯', 'daseot']];   // 1–5 in Korean
 
 const LEVELS = [
@@ -546,6 +548,7 @@ if (SET) LEVELS.forEach((L, i) => { const F = SET.fights[i]; Object.assign(L, { 
 const animalSprite = (i, opts = {}) => sprite(ANIMALS[i].rows, ANIMALS[i].pal, { mirror: ANIMALS[i].mirror, over: ANIMALS[i].over || [], ...opts });
 const princessSvg = svg(PRINCESS, 'hero');
 const miniHeart = svg(MINI_HEART, 'mini');
+const SHOP = Butikk({ sprite, svg, book: 'yuna' });   // coins + the shop on page 6
 
 function bonusPics(groups, per) {
   return `<div class="pics${groups * per > 15 ? ' small' : ''}" aria-hidden="true">` +
@@ -574,17 +577,18 @@ function page(L, i) {
   const noun = L.name.charAt(0) + L.name.slice(1).toLowerCase();
   return `
   <section class="page${i === 4 ? ' final' : ''}" data-page="${i + 1}" style="--theme:${L.theme}">
-    <div class="head"><span class="level">NIVÅ 1 · DYR ${i + 1}</span><span class="name">${L.name}<small><span class="ko">${L.ko}</span> ${L.rom}</small></span></div>
+    <div class="head"><span class="level">NIVÅ 1 · DYR ${i + 1}</span><span class="name">${L.name}${KOREA ? `<small><span class="ko">${L.ko}</span> ${L.rom}</small>` : ''}</span></div>
     <div class="stage"><div class="ground"></div>
       <div class="fighter">${princessSvg}</div>
       <div class="mid">${svg(HEART, '')}</div>
-      <div class="fighter animal-spot"><span class="bubble"><span class="ko">도와줘, 미라!</span><small>dowajwo = Hjelp meg, Mira!</small></span>${svg(animalSprite(i), 'animal')}</div></div>
+      <div class="fighter animal-spot">${KOREA ? '<span class="bubble"><span class="ko">도와줘, 미라!</span><small>dowajwo = Hjelp meg, Mira!</small></span>' : '<span class="bubble">Hjelp meg, Mira!</span>'}${svg(animalSprite(i), 'animal')}</div></div>
     <div class="clear"></div>
     <p class="story">${noun} er redd. Gi den <span class="num">5</span> hjerter, så blir den med deg!</p>
-    <div class="meter">${COUNT.map(([k, r]) => `<div class="hslot">${emptyHeart('slot')}<span class="ko">${k}</span><small>${r}</small></div>`).join('')}</div>
+    <div class="meter">${COUNT.map(([k, r], j) => `<div class="hslot">${emptyHeart('slot')}${KOREA ? `<span class="ko">${k}</span><small>${r}</small>` : `<small>${j + 1}</small>`}</div>`).join('')}</div>
     <div class="cards">${cards}</div>
-    <div class="foot"><span class="badge">${L.badge}</span>
-      <p>Fargelegg ett hjerte for hvert riktig svar!<small>Alle hjertene fulle? Da blir dyret med deg!</small></p></div>
+    <div class="foot coinfoot"><div class="line1"><span class="badge">${L.badge}</span>
+      <p>Fargelegg ett hjerte for hvert riktig svar!<small>Fargelegg også én mynt for hvert riktig svar. Alle hjertene fulle? Da blir dyret med deg!</small></p></div>
+      ${SHOP.coinRow(6)}</div>
   </section>`;
 }
 
@@ -594,9 +598,11 @@ const sy = ([x, y]) => [x, y * SY];
 const NODES = [[62, 170], [140, 166], [138, 112], [50, 108], [80, 62]].map(sy);
 const LABEL = ['below', 'below', 'right', 'below', 'above'];
 const START = sy([22, 172]), GOAL = sy([158, 52]);
+const SHOP_AT = sy([92, 98]);
+const PAGE_OF = [3, 4, 5, 7, 8];   // the shop is page 6, the castle page 9
 
 function mapPage() {
-  const pts = [START, ...NODES, GOAL].map(p => p.join(',')).join(' ');
+  const pts = [START, NODES[0], NODES[1], NODES[2], SHOP_AT, NODES[3], NODES[4], GOAL].map(p => p.join(',')).join(' ');
   const trees = [[18,128],[30,138],[100,142],[112,150],[182,142],[184,20],[16,72],[28,64],[26,36],[125,30],[182,188],[100,192]]
     .map(sy).map(([x, y]) => place(TREE, x, y, 13)).join('');
   const flowers = [[40,150],[88,120],[120,120],[170,80],[10,190],[135,195],[60,20],[100,60],[176,112],[92,168]]
@@ -609,7 +615,7 @@ function mapPage() {
       place(animalSprite(i), x, y, i === 4 ? 26 : 20) +
       place(hs, lx + 4, ly + 7.5, 7.5) +
       `<text x="${lx + 10}" y="${ly + 6.5}" font-size="${i === 4 ? 3.6 : 4.2}">${L.short}</text>` +
-      `<text x="${lx + 10}" y="${ly + 12}" font-size="2.8" fill="#7a6388" style="fill:#7a6388">SIDE ${i + 2} · ${L.rom}</text>`;
+      `<text x="${lx + 10}" y="${ly + 12}" font-size="2.8" fill="#7a6388" style="fill:#7a6388">SIDE ${PAGE_OF[i]}${KOREA ? ' · ' + L.rom : ''}</text>`;
   }).join('');
   return `
   <section class="page mappage" data-page="kart" style="--theme:#ff6fb0">
@@ -621,13 +627,16 @@ function mapPage() {
         ${trees}${flowers}
         <polyline points="${pts}" fill="none" stroke="${OUT}" stroke-width="4.4" stroke-linejoin="miter"/>
         <polyline points="${pts}" fill="none" stroke="#ffc2de" stroke-width="2.8" stroke-dasharray="3 2.2" stroke-linejoin="miter"/>
+        ${place(SHOP.ICON, SHOP_AT[0], SHOP_AT[1] + 4, 14)}
+        <text x="${SHOP_AT[0] - 13}" y="${SHOP_AT[1] + 9}" font-size="3.2">BUTIKK</text>
+        <text x="${SHOP_AT[0] - 13}" y="${SHOP_AT[1] + 13.5}" font-size="2.8" fill="#5b5468" style="fill:#5b5468">SIDE 6</text>
         ${place(cloud('#ffe0ef'), START[0], START[1] + 6, 7)}
         ${place(PRINCESS, START[0], START[1], 20)}
         <text x="${START[0] - 9}" y="${START[1] + 13}" font-size="3.6">MIRA</text>
         ${nodes}
         ${place(CASTLE, GOAL[0], GOAL[1], 30)}
         <text x="${GOAL[0] - 20}" y="${GOAL[1] + 8}" font-size="3.6">SLOTTET MITT</text>
-        <text x="${GOAL[0] - 20}" y="${GOAL[1] + 13}" font-size="2.8" style="fill:#7a6388">SIDE 7</text>
+        <text x="${GOAL[0] - 20}" y="${GOAL[1] + 13}" font-size="2.8" style="fill:#7a6388">SIDE 9</text>
       </svg>
     </div>
     <div class="howto">
@@ -638,29 +647,60 @@ function mapPage() {
           <li>Fulle hjerter? Fargelegg hjertet på kartet!</li>
           <li>Ta med alle dyrene til slottet, der Tokki venter.</li>
         </ol></div>
-      <div class="sign">PRINSESSE: MIRA <span class="ko">미라</span></div>
+      <div class="sign">PRINSESSE: MIRA${KOREA ? ' <span class="ko">미라</span>' : ''}</div>
     </div>
   </section>`;
 }
 
 /* ---------- the castle: bring everyone home ---------- */
 function castlePage() {
-  const rooms = LEVELS.map((L, i) => `<div class="room">${svg(animalSprite(i, { coloring: true }), '')}<b>${L.short}</b><span class="ko">${L.ko}</span><small>${L.rom}</small></div>`).join('') +
-    `<div class="room">${svg((HELT.custom ? sprite(...HELT.heroFor('yuna', { coloring: true })) : sprite(PRINCESS_ROWS, PRINCESS_PAL, { mirror: true, coloring: true })), '')}<b>MIRA</b><span class="ko">미라</span><small>det er meg!</small></div>`;
+  const rooms = LEVELS.map((L, i) => `<div class="room">${svg(animalSprite(i, { coloring: true }), '')}<b>${L.short}</b>${KOREA ? `<span class="ko">${L.ko}</span><small>${L.rom}</small>` : ''}</div>`).join('') +
+    `<div class="room">${svg((HELT.custom ? sprite(...HELT.heroFor('yuna', { coloring: true })) : sprite(PRINCESS_ROWS, PRINCESS_PAL, { mirror: true, coloring: true })), '')}<b>MIRA</b>${KOREA ? '<span class="ko">미라</span>' : ''}<small>det er meg!</small></div>`;
   return `
   <section class="page castlepage" data-page="slott" style="--theme:#ff6fb0">
     <div class="head"><span class="level">NIVÅ 1 · MÅL</span><span class="name">SLOTTET MITT</span></div>
     <div class="castle-scene"><div class="ground"></div>${svg(CASTLE, 'castle')}${svg(PRINCESS, 'hero')}${svg(TOKKI, 'tokki')}</div>
     <h2 class="final-title">HJEMME I SLOTTET!</h2>
-    <p class="final-sub">Tokki sier <span class="ko">고마워!</span> gomawo = takk! Fargelegg hvert dyr når det er trygt hjemme.</p>
+    <p class="final-sub">${KOREA ? 'Tokki sier <span class="ko">고마워!</span> gomawo = takk!' : 'Tokki sier tusen takk!'} Fargelegg hvert dyr når det er trygt hjemme.</p>
     <div class="rooms">${rooms}</div>
     <div class="diploma"><h3>DIPLOM</h3>
-      <p>Prinsesse Mira <b class="ko">미라</b> har reddet alle kjæledyrene til Tokki!<br><b class="ko">고마워, 미라! 사랑해!</b> Takk, Mira! Jeg er glad i deg!</p></div>
+      ${KOREA ? '<p>Prinsesse Mira <b class="ko">미라</b> har reddet alle kjæledyrene til Tokki!<br><b class="ko">고마워, 미라! 사랑해!</b> Takk, Mira! Jeg er glad i deg!</p>' : '<p>Prinsesse Mira har reddet alle kjæledyrene til Tokki!<br>Tusen takk, Mira! Jeg er glad i deg!</p>'}</div>
   </section>`;
 }
 
-/* ---------- the story ---------- */
-function storyPage() {
+/* ---------- the story (the version without Korea, used on the public site) ---------- */
+function storyPagePlain() {
+  return `
+  <section class="page cover" data-page="historie" style="--theme:#ff6fb0">
+    <div class="head"><span class="level">HISTORIEN</span><span class="name">NIVÅ 1</span></div>
+    <div class="title"><h1>PRINSESSE MIRA OG<br><em>DYRENE I BLOMSTERDALEN</em></h1></div>
+    <div class="stage"><div class="ground"></div>
+      <div class="pair">${svg(PRINCESS, 'hero')}${svg(PIP, 'bunny')}</div>
+      <div class="mid">${svg(HEART, '')}</div>
+      <div class="fighter animal-spot"><span class="bubble">Hei, Pip!</span>${svg(TOKKI, 'bunny')}</div>
+    </div>
+    <div class="tale">
+      <p>En dag kom det et brev til kaninen Pip. Det var fra kusinen hennes, Tokki, som bor på den andre siden av Blomsterdalen.</p>
+      <p class="letter">Hei, Pip! Jeg var på sykkeltur, og alle kjæledyrene mine ble borte. Kan du og prinsesse Mira komme og hjelpe meg?
+        <span class="sig">Hilsen Tokki</span></p>
+      <p>Mira og Pip dro av gårde med en gang. Men dyrene kjente ikke Mira. De var redde og gjemte seg.</p>
+      <p>Da fikk Pip en god idé: – Alle dyr forstår matte! For hvert riktig svar får dyret et hjerte. Når dyret har fått fem hjerter, stoler det på Mira og blir med henne.</p>
+      <p>Underveis tjener Mira mynter. Halvveis ligger en butikk der hun kan kjøpe smarte ting.</p>
+      <p class="big">Klarer du det, Mira? Finn alle dyrene og ta dem med til slottet, der Tokki venter!</p>
+    </div>
+    <div class="glossary"><h2>SLIK SPILLER DU</h2>
+      <ul>
+        <li><b>Hjerter:</b> <i>Fargelegg ett hjerte for hvert riktig svar.</i></li>
+        <li><b>Mynter:</b> <i>Fargelegg én mynt for hvert riktig svar.</i></li>
+        <li><b>Butikken:</b> <i>På side 6 kan du kjøpe smarte ting.</i></li>
+        <li><b>Slottet:</b> <i>Ta med alle dyrene hjem på side 9.</i></li>
+      </ul>
+    </div>
+  </section>`;
+}
+
+/* ---------- the story (Korean version) ---------- */
+function storyPageKorea() {
   return `
   <section class="page cover" data-page="historie" style="--theme:#ff6fb0">
     <div class="head"><span class="level">HISTORIEN</span><span class="name">NIVÅ 1</span></div>
@@ -694,6 +734,8 @@ function storyPage() {
   </section>`;
 }
 
+const storyPage = () => KOREA ? storyPageKorea() : storyPagePlain();
+
 function keyPage() {
   const rows = LEVELS.map((L, i) => `<tr><td class="lvl">${i + 1}</td><td>${L.name.charAt(0) + L.name.slice(1).toLowerCase()}</td>` +
     L.ans.map(a => `<td><b>${a}</b></td>`).join('') + `</tr>`).join('');
@@ -707,7 +749,8 @@ function keyPage() {
 }
 
 const stack = document.getElementById('stack');
-stack.innerHTML = HELT.names('yuna', storyPage() + mapPage() + LEVELS.map(page).join('') + castlePage() + keyPage());
+stack.innerHTML = HELT.names('yuna', storyPage() + mapPage() + LEVELS.slice(0, 3).map(page).join('') +
+  SHOP.page({ hero: PRINCESS, level: 'NIVÅ 1', next: 'du drar hjem til slottet' }) + LEVELS.slice(3).map((L, i) => page(L, i + 3)).join('') + castlePage() + keyPage());
 
 // Screen only: tap a heart to colour it in.
 stack.addEventListener('click', e => {
@@ -716,7 +759,7 @@ stack.addEventListener('click', e => {
 });
 
 const tb = document.getElementById('toolbar');
-const views = [['alle', 'ALLE'], ['historie', 'HISTORIE'], ['kart', 'KART'], ...LEVELS.map((_, i) => [String(i + 1), 'DYR ' + (i + 1)]), ['slott', 'SLOTT'], ['fasit', 'FASIT']];
+const views = [['alle', 'ALLE'], ['historie', 'HISTORIE'], ['kart', 'KART'], ...LEVELS.slice(0, 3).map((_, i) => [String(i + 1), 'DYR ' + (i + 1)]), ['butikk', 'BUTIKK'], ['4', 'DYR 4'], ['5', 'DYR 5'], ['slott', 'SLOTT'], ['fasit', 'FASIT']];
 tb.innerHTML = views.map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v === 'alle'}">${t}</button>`).join('') +
   `<button type="button" id="printbtn" class="print">SKRIV UT / LAGRE SOM PDF</button>` +
   `<span class="hint">Velg «Lagre som PDF» i utskriftsvinduet, eller skriv ut direkte på A4.</span>`;
